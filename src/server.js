@@ -52,7 +52,9 @@ app.get('/health', (req, res) => {
 // Proxy endpoint with caching
 app.get('/api/v1/streamingProxy', async (req, res) => {
   try {
-    const url = decodeURIComponent(req.query.url);
+    // URL is already decoded
+    const url = req.query.url;
+
     if (!url) {
       return res.status(400).json({ error: "URL parameter is required" });
     }
