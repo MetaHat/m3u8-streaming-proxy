@@ -3,316 +3,1196 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Streaming Proxy Player</title>
+  <title>Metahat Stream Pro - Ultimate Edition</title>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+  <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-color: #121212;
-      --card-bg: #1e1e1e;
+      --bg-base: #030305;
+      --bg-sidebar: #0a0a0f;
+      --bg-panel: rgba(18, 18, 24, 0.7);
+      --bg-panel-hover: rgba(28, 28, 38, 0.9);
+      
+      --primary: #f40612;
+      --primary-hover: #ff1f2d;
+      --primary-glow: rgba(244, 6, 18, 0.5);
+      --primary-dim: rgba(244, 6, 18, 0.15);
+      
+      --secondary: #2563eb;
+      --secondary-glow: rgba(37, 99, 235, 0.5);
+      
+      --accent: #10b981;
+      --accent-glow: rgba(16, 185, 129, 0.4);
+      
       --text-main: #ffffff;
-      --text-muted: #a0a0a0;
-      --primary: #bb86fc;
-      --primary-hover: #9c68de;
-      --error: #cf6679;
-      --success: #03dac6;
-      --warning: #f6ea8c;
-      --border: #333333;
+      --text-dim: #cbd5e1;
+      --text-muted: #64748b;
+      
+      --border-light: rgba(255, 255, 255, 0.06);
+      --border-glow: rgba(255, 255, 255, 0.12);
+      
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 30px;
+      
+      --shadow-flat: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+      --shadow-glow: 0 0 20px var(--primary-glow);
+      --shadow-panel: 0 10px 30px -10px rgba(0, 0, 0, 0.8);
+      
+      --plyr-color-main: var(--primary);
+      --plyr-video-background: #000000;
+      --plyr-menu-background: rgba(15, 15, 20, 0.95);
+      --plyr-menu-color: var(--text-main);
+      --plyr-menu-border-shadow: 0 10px 40px rgba(0,0,0,0.8);
+      --plyr-menu-radius: var(--radius-md);
+      --plyr-tooltip-background: rgba(0,0,0,0.9);
+      --plyr-tooltip-radius: 6px;
+      
+      --sidebar-width: 280px;
+      --header-height: 80px;
+      
+      --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-base);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #445;
     }
 
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: var(--bg-color);
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-base);
       color: var(--text-main);
+      overflow-x: hidden;
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    .app-layout {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border-light);
       display: flex;
       flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
+      height: 100%;
+      transition: transform var(--transition-fast), width var(--transition-fast);
+      z-index: 100;
+      position: relative;
     }
 
-    .container {
-      width: 100%;
-      max-width: 1000px;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 20px;
-    }
-
-    .card {
-      background: var(--card-bg);
-      padding: 20px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-    }
-
-    h1 {
-      text-align: center;
-      margin-top: 0;
-      color: var(--primary);
-      font-size: 24px;
-    }
-
-    .input-group {
+    .sidebar-header {
+      height: var(--header-height);
       display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
+      align-items: center;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--border-light);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%);
     }
 
-    input[type="text"] {
-      flex: 1;
-      padding: 12px 16px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: #2c2c2c;
-      color: white;
-      font-size: 16px;
-      outline: none;
-      transition: border-color 0.3s;
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Oswald', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--text-main);
+      text-decoration: none;
     }
 
-    input[type="text"]:focus {
-      border-color: var(--primary);
-    }
-
-    button {
-      padding: 12px 24px;
-      background: var(--primary);
-      color: #000;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: bold;
-      transition: background 0.3s, transform 0.1s;
-    }
-
-    button:hover {
-      background: var(--primary-hover);
-    }
-
-    button:active {
-      transform: scale(0.98);
-    }
-
-    #video-container {
-      background: #000;
-      border-radius: 8px;
-      overflow: hidden;
-      aspect-ratio: 16 / 9;
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--primary), #990000);
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .logo-icon svg {
+      width: 20px;
+      height: 20px;
+      fill: white;
+    }
+
+    .logo span {
+      background: linear-gradient(to right, #fff, #a0a0a0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-menu {
+      padding: 24px 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 20px;
+      border-radius: var(--radius-md);
+      color: var(--text-dim);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 15px;
+      transition: all var(--transition-fast);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 3px;
+      background: var(--primary);
+      transform: scaleY(0);
+      transition: transform var(--transition-bounce);
+      transform-origin: center;
+    }
+
+    .nav-item:hover, .nav-item.active {
+      background: var(--primary-dim);
+      color: var(--text-main);
+    }
+
+    .nav-item.active::before {
+      transform: scaleY(1);
+    }
+
+    .nav-item svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+      transition: transform var(--transition-bounce);
+    }
+
+    .nav-item:hover svg {
+      transform: scale(1.1);
+    }
+
+    .sidebar-footer {
+      padding: 24px;
+      border-top: 1px solid var(--border-light);
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      position: relative;
+      background: radial-gradient(circle at top right, rgba(244, 6, 18, 0.05) 0%, transparent 40%),
+                  radial-gradient(circle at bottom left, rgba(37, 99, 235, 0.03) 0%, transparent 40%);
+    }
+
+    .top-header {
+      height: var(--header-height);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-light);
+      background: rgba(3, 3, 5, 0.8);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 50;
+    }
+
+    .mobile-toggle {
+      display: none;
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      cursor: pointer;
+      padding: 8px;
+    }
+
+    .mobile-toggle svg {
+      width: 28px;
+      height: 28px;
+      fill: currentColor;
+    }
+
+    .url-bar-container {
+      flex: 1;
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      position: relative;
+    }
+
+    .input-group {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 20px;
+      width: 20px;
+      height: 20px;
+      fill: var(--text-muted);
+      pointer-events: none;
+      transition: fill var(--transition-fast);
+    }
+
+    .main-input {
+      width: 100%;
+      height: 56px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-xl);
+      padding: 0 24px 0 56px;
+      color: var(--text-main);
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      transition: all var(--transition-fast);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .main-input:focus {
+      outline: none;
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(244, 6, 18, 0.5);
+      box-shadow: 0 0 0 4px rgba(244, 6, 18, 0.1), inset 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .main-input:focus + .input-icon {
+      fill: var(--primary);
+    }
+
+    .btn {
+      height: 56px;
+      padding: 0 36px;
+      border-radius: var(--radius-xl);
+      border: none;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all var(--transition-bounce);
+      position: relative;
+      overflow: hidden;
+      letter-spacing: 0.5px;
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.7s ease;
+    }
+
+    .btn:hover::after {
+      left: 150%;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #b90000);
+      color: white;
+      box-shadow: 0 8px 20px rgba(244, 6, 18, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 25px rgba(244, 6, 18, 0.5);
+    }
+
+    .btn-primary:active {
+      transform: translateY(1px);
+    }
+
+    .btn-primary svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: rgba(255,255,255,0.05);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border-light);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-dim);
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      transition: all var(--transition-fast);
+    }
+
+    .status-dot.active {
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent-glow);
+      animation: pulse-dot 2s infinite;
+    }
+
+    .status-dot.error {
+      background: var(--primary);
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+
+    @keyframes pulse-dot {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+      70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    .content-area {
+      flex: 1;
+      padding: 32px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .player-section {
+      width: 100%;
+      max-width: 1600px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .video-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #000;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-panel), 0 0 0 1px var(--border-light);
+      overflow: hidden;
     }
 
     video {
       width: 100%;
       height: 100%;
-      display: block;
+      object-fit: contain;
     }
 
-    /* Logs Section */
-    .logs-container {
-      background: #0d0d0d;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      height: 250px;
-      overflow-y: auto;
-      padding: 15px;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 14px;
-      line-height: 1.5;
+    /* Deep Customization of Plyr to make it look premium */
+    .plyr--video .plyr__controls {
+      background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, transparent 100%) !important;
+      padding: 60px 24px 24px 24px !important;
+      transition: opacity 0.4s ease !important;
     }
 
-    .logs-header {
+    .plyr--video .plyr__control--overlaid {
+      background: rgba(244, 6, 18, 0.9) !important;
+      box-shadow: 0 0 30px rgba(244, 6, 18, 0.6) !important;
+      padding: 24px !important;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease !important;
+    }
+
+    .plyr--video .plyr__control--overlaid:hover {
+      background: #ff1f2d !important;
+      transform: scale(1.15) translate(-50%, -50%) !important;
+    }
+
+    .plyr--video .plyr__control--overlaid svg {
+      width: 32px !important;
+      height: 32px !important;
+    }
+
+    .plyr__controls .plyr__control {
+      margin: 0 8px !important;
+      border-radius: 12px !important;
+      transition: all 0.2s ease !important;
+    }
+
+    .plyr__controls .plyr__control:hover {
+      background: rgba(255, 255, 255, 0.15) !important;
+    }
+
+    .plyr__progress__container {
+      margin-bottom: 16px !important;
+    }
+
+    .plyr--full-ui input[type=range] {
+      color: var(--primary) !important;
+    }
+
+    .plyr__menu__container {
+      background: rgba(18, 18, 24, 0.95) !important;
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md) !important;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.9) !important;
+    }
+
+    .plyr__menu__container .plyr__control {
+      font-family: 'Inter', sans-serif !important;
+      font-size: 14px !important;
+      padding: 10px 16px !important;
+    }
+
+    .plyr__menu__container .plyr__control[role=menuitemradio][aria-checked=true]::before {
+      background: var(--primary) !important;
+    }
+
+    /* Custom Loader Overlay */
+    .loader-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 24px;
+      z-index: 50;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+    }
+
+    .loader-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .cyber-spinner {
+      position: relative;
+      width: 80px;
+      height: 80px;
+    }
+
+    .cyber-spinner-circle {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 3px solid transparent;
+    }
+
+    .cyber-spinner-circle:nth-child(1) {
+      border-top-color: var(--primary);
+      animation: spin-forward 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+    }
+    .cyber-spinner-circle:nth-child(2) {
+      border-right-color: var(--secondary);
+      border-bottom-color: var(--secondary);
+      inset: 8px;
+      animation: spin-reverse 1.5s linear infinite;
+    }
+    .cyber-spinner-circle:nth-child(3) {
+      border-left-color: #fff;
+      inset: 16px;
+      animation: spin-forward 0.8s ease-in-out infinite;
+    }
+
+    .loader-text {
+      font-family: 'Fira Code', monospace;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px var(--primary-glow);
+      animation: pulse-text 1.5s ease-in-out infinite alternate;
+    }
+
+    .dashboard-panels {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 24px;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+      animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s backwards;
+    }
+
+    .panel {
+      background: var(--bg-panel);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: var(--shadow-panel);
+    }
+
+    .panel-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-light);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
+      background: rgba(255, 255, 255, 0.02);
     }
 
-    .logs-header h3 {
-      margin: 0;
+    .panel-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
       font-size: 16px;
-      color: var(--text-muted);
+      font-weight: 600;
+      color: var(--text-main);
+      letter-spacing: 0.5px;
     }
 
-    .clear-btn {
+    .panel-title svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--primary);
+      filter: drop-shadow(0 0 5px var(--primary-glow));
+    }
+
+    .panel-actions button {
       background: transparent;
-      color: var(--text-muted);
-      border: 1px solid var(--border);
-      padding: 4px 10px;
+      border: 1px solid var(--border-light);
+      color: var(--text-dim);
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
       font-size: 12px;
-      font-weight: normal;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .clear-btn:hover { background: #333; color: white; }
 
-    .log-entry { margin-bottom: 5px; word-wrap: break-word; }
-    .log-time { color: #888; margin-right: 8px; font-size: 12px; }
-    .log-info { color: var(--success); }
-    .log-error { color: var(--error); font-weight: bold; }
-    .log-warning { color: var(--warning); }
-    
-    footer {
-      margin-top: 30px;
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 14px;
+    .panel-actions button:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border-color: rgba(255,255,255,0.3);
     }
-    footer a { color: var(--primary); text-decoration: none; }
-    footer a:hover { text-decoration: underline; }
+
+    .stats-grid {
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .stat-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: transform var(--transition-fast);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,0.15);
+      background: rgba(0,0,0,0.4);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-family: 'Fira Code', monospace;
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .stat-unit {
+      font-size: 12px;
+      color: var(--primary);
+    }
+
+    .terminal-container {
+      flex: 1;
+      padding: 20px;
+      background: #050508;
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-y: auto;
+      min-height: 300px;
+      max-height: 400px;
+    }
+
+    .terminal-line {
+      display: flex;
+      margin-bottom: 6px;
+      animation: fadeIn 0.3s ease-out;
+      word-break: break-all;
+    }
+
+    .term-time {
+      color: #475569;
+      margin-right: 12px;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .term-prefix {
+      color: #3b82f6;
+      margin-right: 12px;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .term-content {
+      color: #e2e8f0;
+    }
+
+    .term-info .term-content { color: #94a3b8; }
+    .term-success .term-content { color: #34d399; text-shadow: 0 0 8px rgba(52, 211, 153, 0.3); }
+    .term-warning .term-content { color: #fbbf24; }
+    .term-error .term-content { color: #ef4444; font-weight: 600; }
+
+    @keyframes spin-forward { 100% { transform: rotate(360deg); } }
+    @keyframes spin-reverse { 100% { transform: rotate(-360deg); } }
+    @keyframes pulse-text { 0% { opacity: 0.6; } 100% { opacity: 1; text-shadow: 0 0 20px var(--primary-glow); } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+
+    /* Responsive Design Media Queries */
+    @media (max-width: 1200px) {
+      .dashboard-panels {
+        grid-template-columns: 1fr;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    @media (max-width: 992px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .url-bar-container {
+        max-width: 100%;
+      }
+      .top-header {
+        padding: 0 20px;
+      }
+      .content-area {
+        padding: 20px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      :root {
+        --header-height: 70px;
+      }
+      .sidebar {
+        position: absolute;
+        left: -100%;
+        box-shadow: 20px 0 50px rgba(0,0,0,0.8);
+      }
+      .sidebar.open {
+        left: 0;
+      }
+      .mobile-toggle {
+        display: block;
+      }
+      .url-bar-container {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        gap: 12px;
+      }
+      .input-group, .btn {
+        width: 100%;
+      }
+      .btn {
+        justify-content: center;
+      }
+      .status-badge {
+        display: none;
+      }
+      .top-header {
+        height: auto;
+        padding: 16px;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      .video-container {
+        border-radius: var(--radius-md);
+      }
+      .plyr--video .plyr__controls {
+        padding: 40px 12px 12px 12px !important;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <div class="card">
-      <h1>Streaming Proxy Player</h1>
+  <div class="app-layout">
+
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <a href="#" class="logo">
+          <div class="logo-icon">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+          Meta<span>Hat</span>
+        </a>
+      </div>
       
-      <div class="input-group">
-        <input type="text" id="url-input" placeholder="Enter .m3u8 URL (e.g., https://example.com/playlist.m3u8)">
-        <button id="load-btn">Load Stream</button>
-      </div>
+      <nav class="nav-menu">
+        <a class="nav-item active" onclick="navigate('player')">
+          <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM8 15c0-1.66 1.34-3 3-3 .35 0 .69.07 1 .18V6h5v2h-3v7.03c-.02 1.64-1.35 2.97-3 2.97-1.66 0-3-1.34-3-3z"/></svg>
+          Live Player
+        </a>
+      </nav>
 
-      <div id="video-container">
-        <video id="video" controls></video>
+      <div class="sidebar-footer">
+        Metahat Engine v3.0.4 <br>
+        Deep Streaming Protocol
       </div>
-    </div>
+    </aside>
 
-    <div class="card">
-      <div class="logs-header">
-        <h3>Console Logs</h3>
-        <button class="clear-btn" id="clear-logs-btn">Clear Logs</button>
+    <main class="main-content">
+      
+      <header class="top-header">
+        <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
+          <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+        </button>
+
+        <div class="url-bar-container">
+          <div class="input-group">
+            <svg class="input-icon" viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
+            <input type="text" id="url-input" class="main-input" placeholder="Enter HLS Master Manifest (.m3u8) URL..." autocomplete="off">
+          </div>
+          <button class="btn btn-primary" onclick="handleLoadClick()">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            Initialize Stream
+          </button>
+        </div>
+
+        <div class="status-badge">
+          <div class="status-dot" id="network-dot"></div>
+          <span id="network-text">Disconnected</span>
+        </div>
+      </header>
+
+      <div class="content-area">
+        
+
+        <section class="player-section">
+          <div class="video-container">
+            <div id="loader" class="loader-overlay active">
+              <div class="cyber-spinner">
+                <div class="cyber-spinner-circle"></div>
+                <div class="cyber-spinner-circle"></div>
+                <div class="cyber-spinner-circle"></div>
+              </div>
+              <div class="loader-text" id="loader-msg">Awaiting Input</div>
+            </div>
+            <video id="player" controls playsinline></video>
+          </div>
+        </section>
+
+        <section class="dashboard-panels">
+          
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">
+                <svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+                Stream Telemetry
+              </div>
+            </div>
+            <div class="stats-grid">
+              <div class="stat-card">
+                <span class="stat-label">Resolution</span>
+                <span class="stat-value" id="stat-res">--- <span class="stat-unit">px</span></span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-label">Bandwidth</span>
+                <span class="stat-value" id="stat-bw">0.0 <span class="stat-unit">Mbps</span></span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-label">Buffer Health</span>
+                <span class="stat-value" id="stat-buf">0 <span class="stat-unit">sec</span></span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-label">Dropped Frames</span>
+                <span class="stat-value" id="stat-drop" style="color: var(--text-main);">0</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">
+                <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4V8h16v10zm-2-1h-6v-2h6v2zM7.5 17l-1.41-1.41L8.67 13l-2.58-2.59L7.5 9l4 4-4 4z"/></svg>
+                System Console
+              </div>
+              <div class="panel-actions">
+                <button onclick="copyLogs()">
+                  <svg viewBox="0 0 24 24" style="width:14px; height:14px; fill:currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                  Copy
+                </button>
+                <button onclick="document.getElementById('terminal').innerHTML = ''; addLog('Console cleared by user.', 'info');">
+                  <svg viewBox="0 0 24 24" style="width:14px; height:14px; fill:currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                  Clear
+                </button>
+              </div>
+            </div>
+            <div class="terminal-container" id="terminal"></div>
+          </div>
+
+        </section>
       </div>
-      <div class="logs-container" id="logs">
-        <div class="log-entry"><span class="log-info">Ready to load stream...</span></div>
-      </div>
-    </div>
+    </main>
   </div>
 
-  <footer>
-    Made by <a href="https://github.com/metahat" target="_blank" rel="noopener noreferrer">Metahat</a>
-  </footer>
-
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const video = document.getElementById('video');
-      const urlInput = document.getElementById('url-input');
-      const loadBtn = document.getElementById('load-btn');
-      const logsDiv = document.getElementById('logs');
-      const clearLogsBtn = document.getElementById('clear-logs-btn');
+    let hls = null;
+    let player = null;
+    let statsInterval = null;
+    const videoElement = document.getElementById('player');
+    const loader = document.getElementById('loader');
+    const loaderMsg = document.getElementById('loader-msg');
+
+    const elRes = document.getElementById('stat-res');
+    const elBw = document.getElementById('stat-bw');
+    const elBuf = document.getElementById('stat-buf');
+    const elDrop = document.getElementById('stat-drop');
+    const netDot = document.getElementById('network-dot');
+    const netText = document.getElementById('network-text');
+
+    function addLog(message, type = 'info') {
+      const term = document.getElementById('terminal');
+      if (!term) return;
+      const entry = document.createElement('div');
+      entry.className = `terminal-line term-${type}`;
       
-      let hls = null;
+      const time = new Date().toISOString().substring(11, 23);
+      let prefix = '~>';
+      if (type === 'error') prefix = 'ERR';
+      if (type === 'success') prefix = 'OK ';
+      if (type === 'warning') prefix = 'WRN';
 
-      function addLog(message, type = 'info') {
-        const entry = document.createElement('div');
-        entry.className = `log-entry log-${type}`;
-        const time = new Date().toLocaleTimeString();
-        entry.innerHTML = `<span class="log-time">[${time}]</span> ${message}`;
-        logsDiv.appendChild(entry);
-        logsDiv.scrollTop = logsDiv.scrollHeight; // Auto-scroll
-      }
+      entry.innerHTML = `
+        <span class="term-time">[${time}]</span>
+        <span class="term-prefix">${prefix}</span>
+        <span class="term-content">${message}</span>
+      `;
+      term.appendChild(entry);
+      term.scrollTop = term.scrollHeight;
+    }
 
-      clearLogsBtn.addEventListener('click', () => {
-        logsDiv.innerHTML = '';
-        addLog('Logs cleared.', 'info');
+    function copyLogs() {
+      const logs = document.getElementById('terminal').innerText;
+      navigator.clipboard.writeText(logs).then(() => {
+        addLog('Console output copied to clipboard.', 'success');
       });
+    }
 
-      function destroyPlayer() {
-        if (hls) {
-          hls.destroy();
-          hls = null;
-          addLog('Destroyed previous HLS instance.', 'warning');
-        }
-        video.src = '';
+    function updateNetworkStatus(status) {
+      netDot.className = 'status-dot'; // Reset
+      if (status === 'connecting') {
+        netDot.classList.add('active');
+        netDot.style.background = '#fbbf24';
+        netText.textContent = 'Negotiating...';
+      } else if (status === 'connected') {
+        netDot.classList.add('active');
+        netText.textContent = 'Secure Socket Active';
+      } else if (status === 'error') {
+        netDot.classList.add('error');
+        netText.textContent = 'Connection Failed';
+      } else {
+        netText.textContent = 'Disconnected';
       }
+    }
 
-      function loadStream(url) {
-        destroyPlayer();
-        addLog(`Initializing stream: ${url}`, 'info');
-        
-        const proxyUrl = `/api/v1/streamingProxy?url=${encodeURIComponent(url)}`;
-        addLog(`Proxy URL generated: ${proxyUrl}`, 'info');
-        
-        if (Hls.isSupported()) {
-          addLog('HLS.js is supported. Attaching media...', 'info');
-          hls = new Hls({
-            debug: false,
-            xhrSetup: function(xhr, url) {
-              // Custom headers can be set here if needed by the frontend
-            }
-          });
-          
-          hls.loadSource(proxyUrl);
-          hls.attachMedia(video);
-          
-          hls.on(Hls.Events.MANIFEST_PARSED, function(event, data) {
-            addLog(`Manifest parsed successfully! Found ${data.levels.length} quality levels.`, 'success');
-            video.play().catch(e => {
-              addLog(`Auto-play prevented by browser: ${e.message}`, 'warning');
-            });
-          });
-          
-          hls.on(Hls.Events.ERROR, function(event, data) {
-            if (data.fatal) {
-              let errorMsg = `Fatal Error (${data.type}): ${data.details}`;
-              
-              // CORS / Network Error Detection
-              if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-                if (data.response && data.response.code === 0) {
-                  errorMsg = `NETWORK ERROR: Connection refused or CORS policy violation detected! Status 0. (Check if the Proxy Server allows your origin or if the target blocked the proxy). Details: ${data.details}`;
-                } else if (data.response && data.response.code >= 400) {
-                   errorMsg = `HTTP Error ${data.response.code} fetching stream. Details: ${data.details}`;
-                }
-                addLog(errorMsg, 'error');
-                hls.startLoad(); // attempt to recover
-              } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-                addLog(`MEDIA ERROR: ${data.details}. Attempting recovery...`, 'warning');
-                hls.recoverMediaError();
-              } else {
-                addLog(errorMsg, 'error');
-                destroyPlayer();
-              }
-            } else {
-              addLog(`Non-fatal warning: ${data.details}`, 'warning');
-            }
-          });
-        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-          addLog('Native HLS support detected (Safari).', 'info');
-          video.src = proxyUrl;
-          video.addEventListener('loadedmetadata', function() {
-            addLog('Stream metadata loaded successfully!', 'success');
-            video.play().catch(e => addLog(`Playback error: ${e.message}`, 'error'));
-          });
-          video.addEventListener('error', function() {
-            const err = video.error;
-            let msg = 'Unknown native video error.';
-            if (err) {
-              if (err.code === 4) msg = 'Format not supported or network/CORS error on native player.';
-            }
-            addLog(`Native Error: ${msg}`, 'error');
-          });
+    function toggleLoader(show, msg = 'Processing') {
+      if (show) {
+        loader.classList.add('active');
+        loaderMsg.textContent = msg;
+      } else {
+        loader.classList.remove('active');
+      }
+    }
+
+    function startStatsTelemetry() {
+      if (statsInterval) clearInterval(statsInterval);
+      statsInterval = setInterval(() => {
+        if (!hls || !videoElement) return;
+
+        if (hls.levels && hls.levels[hls.currentLevel]) {
+          const level = hls.levels[hls.currentLevel];
+          elRes.innerHTML = `${level.width}x${level.height} <span class="stat-unit">px</span>`;
         } else {
-          addLog('HLS is not supported in this browser.', 'error');
+          elRes.innerHTML = `${videoElement.videoWidth}x${videoElement.videoHeight} <span class="stat-unit">px</span>`;
         }
+
+
+        if (hls.bandwidthEstimate) {
+          const mbps = (hls.bandwidthEstimate / 1000000).toFixed(2);
+          elBw.innerHTML = `${mbps} <span class="stat-unit">Mbps</span>`;
+        }
+
+        let bufferLength = 0;
+        for (let i = 0; i < videoElement.buffered.length; i++) {
+          if (videoElement.currentTime >= videoElement.buffered.start(i) && videoElement.currentTime <= videoElement.buffered.end(i)) {
+            bufferLength = videoElement.buffered.end(i) - videoElement.currentTime;
+            break;
+          }
+        }
+        elBuf.innerHTML = `${bufferLength.toFixed(1)} <span class="stat-unit">sec</span>`;
+
+        if (videoElement.getVideoPlaybackQuality) {
+          const quality = videoElement.getVideoPlaybackQuality();
+          const dropped = quality.droppedVideoFrames;
+          elDrop.innerHTML = `${dropped}`;
+          if (dropped > 0) elDrop.style.color = 'var(--primary)';
+        }
+
+      }, 1000);
+    }
+
+    function stopStatsTelemetry() {
+      if (statsInterval) clearInterval(statsInterval);
+      elRes.innerHTML = `--- <span class="stat-unit">px</span>`;
+      elBw.innerHTML = `0.0 <span class="stat-unit">Mbps</span>`;
+      elBuf.innerHTML = `0 <span class="stat-unit">sec</span>`;
+      elDrop.innerHTML = `0`;
+      elDrop.style.color = 'var(--text-main)';
+    }
+
+    window.handleLoadClick = function() {
+      const urlInput = document.getElementById('url-input');
+      let url = urlInput.value.trim();
+
+      if (!url) {
+        addLog('Exception: URL parameter missing. Payload injection aborted.', 'error');
+        urlInput.focus();
+        return;
       }
 
-      loadBtn.addEventListener('click', function() {
-        const url = urlInput.value.trim();
-        if (!url) {
-          addLog('Error: URL input is empty.', 'error');
-          return;
+      if (url.includes('/api/v1/streamingProxy?url=')) {
+        try {
+          url = new URL(url).searchParams.get('url');
+          urlInput.value = url;
+          addLog('Proxy wrapper detected. Extracting core manifest URL.', 'warning');
+        } catch (e) {}
+      }
+
+      loadStream(url);
+    };
+
+    function loadStream(url) {
+      updateNetworkStatus('connecting');
+      toggleLoader(true, 'Establishing Handshake');
+      addLog(`Initiating socket request to target domain...`, 'info');
+      addLog(`Target: ${url.substring(0, 50)}...`, 'info');
+      
+      const proxyUrl = `/api/v1/streamingProxy?url=${encodeURIComponent(url)}`;
+
+      stopStatsTelemetry();
+      if (player) { 
+        player.destroy(); 
+        player = null; 
+        addLog('Previous Plyr instance destroyed.', 'info');
+      }
+      if (hls) { 
+        hls.destroy(); 
+        hls = null; 
+        addLog('Previous HLS context terminated.', 'info');
+      }
+
+      if (Hls.isSupported()) {
+        hls = new Hls({ 
+          debug: false, 
+          enableWorker: true, 
+          lowLatencyMode: true,
+          backBufferLength: 90
+        });
+        
+        hls.loadSource(proxyUrl);
+        hls.attachMedia(videoElement);
+
+        hls.on(Hls.Events.MEDIA_ATTACHED, function () {
+          addLog('Media element successfully bound to HLS engine.', 'info');
+        });
+
+        hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
+          updateNetworkStatus('connected');
+          addLog(`Manifest parsed. Found ${data.levels.length} quality profiles.`, 'success');
+          
+          const availableQualities = Array.from(new Set(data.levels.map(l => l.height)));
+          availableQualities.unshift(0);
+
+          player = new Plyr(videoElement, {
+            controls: [
+              'play-large', 'play', 'progress', 'current-time', 'duration', 'mute', 'volume', 
+              'settings', 'pip', 'airplay', 'fullscreen'
+            ],
+            settings: ['quality', 'speed'],
+            quality: {
+              default: 0,
+              options: availableQualities,
+              forced: true,
+              onChange: (e) => updateQuality(e),
+            },
+            i18n: {
+              qualityLabel: { 0: 'Auto' },
+            },
+            tooltips: { controls: true, seek: true }
+          });
+
+          player.on('playing', () => toggleLoader(false));
+          player.on('waiting', () => toggleLoader(true, 'Buffering Payload'));
+          player.on('canplay', () => {
+            toggleLoader(false);
+            startStatsTelemetry();
+            addLog('Stream handshake complete. Engine ready.', 'success');
+          });
+
+          player.play().catch(() => {
+            addLog('DOM exception: Autoplay policy restricted. Manual intervention required.', 'warning');
+            toggleLoader(false);
+          });
+        });
+
+        hls.on(Hls.Events.ERROR, function(event, data) {
+          if (data.fatal) {
+            if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+              updateNetworkStatus('error');
+              addLog(`Fatal Network Error: ${data.details}. Attempting recovery...`, 'error');
+              hls.startLoad();
+            } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+              addLog(`Media Error: ${data.details}. Resetting decoder...`, 'warning');
+              hls.recoverMediaError();
+            } else {
+              updateNetworkStatus('error');
+              toggleLoader(false);
+              addLog(`Critical Core Failure: ${data.details}`, 'error');
+              stopStatsTelemetry();
+            }
+          } else {
+            addLog(`HLS Trace: ${data.details}`, 'warning');
+          }
+        });
+
+      } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+        addLog('HLS.js unsupported in this environment. Using Native AVPlayer.', 'warning');
+        player = new Plyr(videoElement);
+        videoElement.src = proxyUrl;
+        
+        player.on('playing', () => { toggleLoader(false); updateNetworkStatus('connected'); });
+        player.on('waiting', () => toggleLoader(true, 'Native Buffering'));
+        player.on('error', () => { updateNetworkStatus('error'); addLog('Native playback error occurred.', 'error'); });
+        
+        videoElement.addEventListener('loadedmetadata', () => {
+          toggleLoader(false);
+          updateNetworkStatus('connected');
+          startStatsTelemetry();
+          addLog('Native player hook established.', 'success');
+          player.play();
+        });
+      }
+    }
+
+    function updateQuality(newQuality) {
+      if (!hls) return;
+      if (newQuality === 0) {
+        hls.currentLevel = -1;
+        addLog('Resolution scaler set to Adaptive (Auto).', 'info');
+      } else {
+        hls.levels.forEach((level, levelIndex) => {
+          if (level.height === newQuality) {
+            hls.currentLevel = levelIndex;
+            addLog(`Resolution target locked at ${newQuality}p.`, 'info');
+          }
+        });
+      }
+    }
+
+    document.addEventListener('click', (e) => {
+      const sidebar = document.getElementById('sidebar');
+      const toggle = document.querySelector('.mobile-toggle');
+      if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+        if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
+          sidebar.classList.remove('open');
         }
-        if (!url.includes('.m3u8')) {
-          addLog('Warning: URL does not end with .m3u8. Attempting anyway...', 'warning');
-        }
-        loadStream(url);
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      addLog('Metahat Streaming Engine initialized.', 'success');
+      addLog('Awaiting manifest injection...', 'info');
       });
 
-      // Default stream
-      urlInput.value = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
-    });
   </script>
 </body>
 </html>
